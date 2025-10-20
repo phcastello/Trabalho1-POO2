@@ -1,0 +1,64 @@
+# =========================
+# COMUM
+# =========================
+server:
+  port: 8080
+
+spring:
+  application:
+    name: poo-backend
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+
+logging:
+  level:
+    org.springframework.jdbc.core: DEBUG
+    org.springframework.jdbc.core.StatementCreatorUtils: TRACE
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+# =========================
+# DEV
+# =========================
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+  datasource:
+    url: jdbc:postgresql://localhost:55432/poo
+    username: poo_user
+    password: poo_pass
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 20000
+
+  flyway:
+    enabled: true
+    # Suporta dois jeitos:
+    # 1) arquivos dentro do backend, em backend/src/resources/db (ex.: V1__init.sql)
+    # 2) arquivos na infra (irmã do backend): infra/db/migrations
+    locations: >
+      classpath:db,
+      filesystem:../infra/db/migrations
+
+  sql:
+    init:
+      mode: never
+
+  mvc:
+    cors:
+      mappings:
+        - path-pattern: /api/**
+          allowed-origins:
+            - http://localhost:5173
+          allowed-methods: [GET, POST, PUT, DELETE, OPTIONS]
+          allowed-headers: ["*"]
+          allow-credentials: true
