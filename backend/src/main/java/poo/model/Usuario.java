@@ -11,6 +11,8 @@ public class Usuario {
         this.nome = nome;
     }
 
+    public Usuario() {}
+
     public Long getId() {
         return id;
     }

@@ -1,1 +1,14 @@
 .vscode/
+**/node_modules/
+
+# Build artifacts
+backend/target/
+frontend/dist/
+
+# Environment and OS files
+*.log
+**/.env
+**/.env.local
+.DS_Store
+
+**/target/
