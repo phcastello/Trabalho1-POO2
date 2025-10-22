@@ -1,13 +1,35 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, onMounted } from "vue";
 import { RouterLink } from "vue-router";
+import { storeToRefs } from "pinia";
 import { useAuth } from "@/store/auth";
+import { useAlunos } from "@/store/alunos";
 
 const auth = useAuth();
+const alunosStore = useAlunos();
+const { total: alunosTotal, loading: alunosLoading, initialized: alunosInitialized, lastError: alunosError } =
+  storeToRefs(alunosStore);
 
 const firstName = computed(() => {
   const fullName = auth.user?.nome ?? "coordenador";
   return fullName.split(" ")[0];
+});
+
+onMounted(() => {
+  alunosStore.fetch().catch(() => undefined);
+});
+
+const alunosCardValue = computed(() => {
+  if (alunosError.value) return "--";
+  if (!alunosInitialized.value && alunosLoading.value) return "...";
+  return String(alunosTotal.value);
+});
+
+const alunosCardNote = computed(() => {
+  if (alunosError.value) return "Não foi possível sincronizar agora. Tente novamente em instantes.";
+  if (!alunosInitialized.value) return "Sincronize com o backend para enxergar matrículas em tempo real.";
+  if (alunosLoading.value) return "Atualizando dados em segundo plano.";
+  return "Contagem atualizada com base nos cadastros do sistema.";
 });
 </script>
 
@@ -23,8 +45,8 @@ const firstName = computed(() => {
     <div class="card-grid">
       <article class="card">
         <span class="card-title">Alunos ativos</span>
-        <p class="card-value">--</p>
-        <p class="card-note">Sincronize com o backend para enxergar matrículas em tempo real.</p>
+        <p class="card-value">{{ alunosCardValue }}</p>
+        <p class="card-note">{{ alunosCardNote }}</p>
       </article>
 
       <article class="card">
