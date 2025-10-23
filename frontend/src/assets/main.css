@@ -388,6 +388,269 @@ input:focus {
   color: var(--text-muted);
 }
 
+.analytics-section {
+  margin-top: 3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
+
+.analytics-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.analytics-title {
+  margin: 0;
+  font-size: 1.65rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.analytics-subtitle {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  max-width: 48ch;
+}
+
+.analytics-insights {
+  display: grid;
+  gap: 1.1rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.insight-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  padding: 1.5rem;
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  box-shadow: var(--shadow-sm);
+}
+
+.insight-title {
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.insight-value {
+  margin: 0;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--brand-600);
+}
+
+.insight-note {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
+.analytics-empty {
+  padding: 1.9rem;
+  border-radius: var(--radius-lg);
+  border: 1px dashed rgba(148, 163, 184, 0.35);
+  background: rgba(255, 255, 255, 0.88);
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.analytics-panels {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+.analytics-card {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  box-shadow: var(--shadow-md);
+  padding: 1.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.35rem;
+}
+
+.analytics-card-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.analytics-card-header h3 {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+.analytics-card-header span {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.department-list,
+.ranking-list,
+.distribution-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.department-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.department-row-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.department-identity {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.department-name {
+  font-weight: 600;
+}
+
+.department-pill {
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: rgba(59, 130, 246, 0.14);
+  color: var(--brand-600);
+}
+
+.department-average {
+  font-weight: 600;
+  color: var(--brand-600);
+}
+
+.metric-bar {
+  height: 8px;
+  width: 100%;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.15);
+  overflow: hidden;
+}
+
+.metric-bar-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(135deg, var(--brand-400), var(--brand-600));
+  transition: width 0.3s ease;
+}
+
+.department-meta {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.ranking-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.ranking-position {
+  font-weight: 600;
+  color: var(--brand-600);
+}
+
+.ranking-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.ranking-name {
+  font-weight: 600;
+}
+
+.ranking-meta {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.ranking-average {
+  font-weight: 600;
+  color: var(--brand-600);
+}
+
+.analytics-divider {
+  height: 1px;
+  background: rgba(148, 163, 184, 0.2);
+}
+
+.distribution-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.distribution-header h4 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.distribution-header span {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.distribution-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.distribution-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.distribution-label {
+  font-weight: 600;
+}
+
+.distribution-meta {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.distribution-percentage {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--brand-600);
+  text-align: right;
+  align-self: flex-end;
+}
+
 @media (max-width: 768px) {
   .app-header {
     flex-wrap: wrap;
