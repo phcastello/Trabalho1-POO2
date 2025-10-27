@@ -1,0 +1,86 @@
+@startuml
+skinparam classAttributeIconSize 0
+
+package "poo.controller" {
+  class AlunoController {
+    -service: AlunoService
+    +create(dto: AlunoRequest): ResponseEntity<Aluno>
+    +list(): List<Aluno>
+    +get(id: Long): Aluno
+    +update(id: Long, dto: AlunoRequest): Aluno
+    +delete(id: Long): ResponseEntity<Void>
+    -toAluno(dto: AlunoRequest): Aluno
+    -normalizeEmail(email: String): String
+  }
+
+  class AlunoRequest {
+    +ra: String
+    +nome: String
+    +email: String
+    +departamentoId: Long
+    +dataNascimento: LocalDate
+  }
+}
+
+package "poo.service" {
+  interface AlunoService {
+    +create(a: Aluno): Aluno
+    +listAll(): List<Aluno>
+    +findById(id: Long): Optional<Aluno>
+    +update(id: Long, a: Aluno): Optional<Aluno>
+    +delete(id: Long): boolean
+  }
+
+  class AlunoServiceImpl implements AlunoService {
+    -dao: AlunoDao
+    -translateUpsertException(ex: DataAccessException): RuntimeException
+  }
+}
+
+package "poo.dao" {
+  interface AlunoDao {
+    +create(a: Aluno): Aluno
+    +findById(id: Long): Optional<Aluno>
+    +findAll(): List<Aluno>
+    +update(a: Aluno): Optional<Aluno>
+    +delete(id: Long): boolean
+  }
+
+  class AlunoDaoJdbc implements AlunoDao {
+    -jdbc: JdbcTemplate
+    -ROW_MAPPER: RowMapper<Aluno>
+    -COLUMNS: String
+    -toSqlDate(data: LocalDate): Date
+  }
+}
+
+package "poo.model" {
+  class Aluno {
+    +id: Long
+    +ra: String
+    +nome: String
+    +email: String
+    +departamentoId: Long
+    +dataNascimento: LocalDate
+    +createdAt: Instant
+    +updatedAt: Instant
+  }
+
+  class Departamento {
+    +id: Long
+    +nome: String
+    +sigla: String
+    +createdAt: Instant
+    +updatedAt: Instant
+  }
+}
+
+AlunoController --> AlunoService : usa
+AlunoController --> AlunoRequest : usa
+AlunoServiceImpl ..|> AlunoService
+AlunoServiceImpl --> AlunoDao : usa
+AlunoDaoJdbc ..|> AlunoDao
+AlunoDaoJdbc --> "JdbcTemplate" : compõe
+Aluno --> Departamento : "N:1 via departamentoId"
+
+@enduml

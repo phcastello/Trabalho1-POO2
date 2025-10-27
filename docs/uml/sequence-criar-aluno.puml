@@ -1,0 +1,18 @@
+@startuml
+actor Usuario as U
+participant "AlunoController" as C
+participant "AlunoService" as S
+participant "AlunoDao" as D
+database "PostgreSQL" as DB
+
+U -> C : POST /api/alunos (AlunoRequest)
+C -> C : toAluno(dto)
+C -> S : create(novoAluno)
+S -> D : create(Aluno)
+D -> DB : INSERT ... RETURNING id, ra, nome, email, ...
+DB --> D : Aluno persistido
+D --> S : Aluno
+S --> C : Aluno
+C -> C : construir Location
+C --> U : ResponseEntity 201 Created (Location /api/alunos/{id})
+@enduml
