@@ -10,13 +10,13 @@ Aplicacao full-stack para gestao academica composta por um backend Spring Boot (
 
 ### MVC + DAO
 
-![Diagrama MVC e DAO](docs/uml/mvc-dao.svg)
+![Diagrama MVC e DAO](docs/uml/mvc-dao.png)
 
 O desenho mostra os papéis de cada camada do backend. A controller REST recebe as requisições HTTP, delega a validação e as regras de negócio para a service, que por sua vez utiliza a camada DAO baseada em JDBC para acessar o banco relacional. O diagrama também deixa explícito que as entidades de domínio (`Aluno`, `Departamento`, etc.) trafegam entre service e DAO, enquanto os DTOs ficam restritos às bordas da aplicação, garantindo separação de responsabilidades e isolamento de tecnologia na camada de persistência.
 
 ### Sequência de criação de aluno
 
-![Diagrama de sequência - Criar Aluno](docs/uml/sequence-criar-aluno.svg)
+![Diagrama de sequência - Criar Aluno](docs/uml/sequence-criar-aluno.png)
 
 Este fluxo detalha a interação ponta a ponta quando um usuário cadastra um aluno pelo frontend. A chamada inicia na interface Vue, que consome o endpoint `POST /api/alunos` da controller. A controller valida os dados, aciona a service para aplicar regras como verificação de departamento e, em seguida, a service chama o DAO JDBC para persistir o novo registro. O diagrama ilustra o retorno em cadeia das respostas, incluindo como a service encapsula mensagens de erro e como a controller converte o resultado em uma resposta HTTP adequada para o cliente.
 
