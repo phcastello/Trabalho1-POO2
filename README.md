@@ -1,60 +1,100 @@
-# Trabalho 1 - POO2
+# Trabalho Final - Banco de Dados 2
 
-Aplicacao full-stack para gestao academica composta por um backend Spring Boot (REST + DAO/JDBC), um frontend Vue 3 com Pinia e uma infra Docker para o banco Postgres.
+Este repositorio consolida a solucao full-stack usada como projeto final da disciplina de Banco de Dados 2. O foco e demonstrar modelagem relacional, integridade transacional e automatizacao do ciclo de vida do banco de dados, enquanto o backend e o frontend funcionam como camadas de apoio para exercitar consultas e cenarios de uso.
 
-- `backend/`: servico REST exposto em `http://localhost:8080/api`, autenticacao via sessao HTTP e migrations Flyway.
-- `frontend/`: SPA criada com Vite, configura a URL base da API via `VITE_API_BASE_URL`.
-- `infra/`: `docker-compose` para subir o banco Postgres com credenciais de desenvolvimento (`poo_user` / `poo_pass`).
+## Visao Geral da Solucao
+- `backend/`: API REST Spring Boot com camada de servico e DAOs JDBC. As migrations Flyway versionam o schema e garantem reproducao do estado do banco.
+- `frontend/`: SPA criada com Vue 3 + Pinia que consome a API e permite validar regras de negocio, fluxos de cadastro e consultas.
+- `infra/`: orquestracao Docker Compose para provisionar Postgres e demais dependencias de banco.
+- `docs/`: diagramas UML aproveitados na disciplina para justificar escolhas de arquitetura e fluxo de dados.
 
-## Diagramas da arquitetura
+## Objetivo Academico e Entregaveis
+- Modelagem conceitual e logica das entidades academicas (departamento, aluno, prova, nota e usuario).
+- Aplicacao de restricoes, referencias e gatilhos que asseguram integridade entre dominios.
+- Scripts reproduziveis (Flyway + Docker) para criar, popular e observar o banco de dados.
+- Endpoints REST e interface web que expõem cenarios de consultas, escritas concorrentes e politicas de autenticacao.
+- Guia de validacao com comandos SQL e testes automatizados que suportam a avaliacao da disciplina.
 
-### MVC + DAO
+## Destaques de Banco de Dados
+- Schema normalizado com indices pensados para consultas por departamento, email e composicao aluno-prova.
+- Gatilhos em PL/pgSQL (`set_updated_at`, `check_nota_mesmo_departamento`) que registram auditoria e impedem inconsistencias entre departamentos.
+- Uso de `pgcrypto` para hash de senha, demonstrando boas praticas de armazenamento seguro.
+- Seeds controlados por Flyway que criam um conjunto minimamente realista de departamentos, alunos, provas e notas para experimentos.
+- Estrutura preparada para testar funcoes agregadas, janelas e visoes (ver instrucoes em `backend/src/main/resources/db/migration` para adicionar novas versoes Flyway).
 
+## Arquitetura e Modelagem
+
+### MVC + DAO (backend)
 ![Diagrama MVC e DAO](docs/uml/mvc-dao.png)
 
-O desenho mostra os papéis de cada camada do backend. A controller REST recebe as requisições HTTP, delega a validação e as regras de negócio para a service, que por sua vez utiliza a camada DAO baseada em JDBC para acessar o banco relacional. O diagrama também deixa explícito que as entidades de domínio (`Aluno`, `Departamento`, etc.) trafegam entre service e DAO, enquanto os DTOs ficam restritos às bordas da aplicação, garantindo separação de responsabilidades e isolamento de tecnologia na camada de persistência.
+O desenho destaca a separacao de responsabilidades adotada no backend. Controllers recebem as chamadas HTTP e delegam regras para services, enquanto os DAOs concentram acesso JDBC e consultas SQL parametrizadas. Essa estrutura facilita mapear as operacoes CRUD para comandos SQL versionados nas migrations.
 
-### Sequência de criação de aluno
+### Sequencia de criacao de aluno
+![Diagrama de sequencia - Criar Aluno](docs/uml/sequence-criar-aluno.png)
 
-![Diagrama de sequência - Criar Aluno](docs/uml/sequence-criar-aluno.png)
+O diagrama acompanha o fluxo completo de cadastro: do formulario no frontend ao commit da transacao SQL. Ele evidencia os pontos em que validacoes de negocio cruzam com restricoes do banco (unicidade de RA, verificacao de departamento e gatilho de consistencia).
 
-Este fluxo detalha a interação ponta a ponta quando um usuário cadastra um aluno pelo frontend. A chamada inicia na interface Vue, que consome o endpoint `POST /api/alunos` da controller. A controller valida os dados, aciona a service para aplicar regras como verificação de departamento e, em seguida, a service chama o DAO JDBC para persistir o novo registro. O diagrama ilustra o retorno em cadeia das respostas, incluindo como a service encapsula mensagens de erro e como a controller converte o resultado em uma resposta HTTP adequada para o cliente.
+## Scripts de Migracao (Flyway)
+- `V1__init.sql`: cria funcoes auxiliares, tabelas `departamento` e `aluno`, alem de indices e gatilhos de auditoria.
+- `V2__provas_notas.sql`: adiciona `prova` e `nota`, assegurando integridade com verificacao de departamento e restricoes de dominio.
+- `V3__auth_usuario.sql`: habilita `pgcrypto` e cria a tabela `usuario` com hash de senha Bcrypt.
+- `V4__seed_dados_iniciais.sql`: popula dados de referencia para execucao de consultas, relatorios e testes de escrita.
 
-## Requisitos
+Para evoluir o schema, adicione novos arquivos numerados em `backend/src/main/resources/db/migration`. Cada script sera aplicado automaticamente na inicializacao do backend ou via `mvn flyway:migrate`.
 
+## Requisitos de Ambiente
 - Java 21 e Maven
 - Node.js 18+ e npm
 - Docker e Docker Compose
+- Opcional: psql ou outro client SQL para inspecao manual
 
-## Subindo o ambiente
+## Preparacao do Ambiente
 
-1. Banco de dados  
-   ```
+1. Banco de dados
+   ```bash
    docker compose -f infra/docker-compose-db.yml up -d
    ```
-   O container expoe o Postgres em `localhost:55432` e as migrations Flyway rodam automaticamente quando o backend inicia. Seeds criam dados iniciais de alunos, provas, notas e um usuario `admin` com senha `senha123`.
+   O Postgres fica exposto em `localhost:55432` (`poo_user` / `poo_pass`). Seeds sao aplicadas nas migrations do backend. Para acessar o banco diretamente:
+   ```bash
+   docker exec -it poo_postgres psql -U poo_user -d poo
+   ```
 
 2. Backend
-   ```
+   ```bash
    cd backend
    mvn spring-boot:run
    ```
-   A API ficara disponivel em `http://localhost:8080/api`. Endpoints principais:
-   - `GET /api/health` - verificacao basica
-   - `POST /api/auth/login` - autentica e cria sessao (usa cookie)
-   - `GET /api/auth/me` - retorna o usuario autenticado
-   - `POST /api/auth/logout` - encerra a sessao
+   A API estara disponivel em `http://localhost:8080/api`. Endpoints principais:
+   - `GET /api/health` para verificar disponibilidade
+   - `POST /api/auth/login` para autenticar (usuario `admin` / `senha123`)
+   - CRUDs relacionados a `alunos`, `departamentos`, `provas` e `notas`
 
-3. Frontend  
-   ```
+3. Frontend
+   ```bash
    cd frontend
    npm install
    npm run dev
    ```
-   Acesse `http://localhost:5173`. O login padrao e `admin` / `senha123`. Ajuste `VITE_API_BASE_URL` no arquivo `.env.local` se necessario.
+   Acesse `http://localhost:5173`. Ajuste `VITE_API_BASE_URL` no `.env.local` para apontar para a API quando necessario.
 
-## Testes e utilidades
+## Rotinas de Validacao
 
-- Backend: `mvn test`
-- Frontend: `npm run check`
-- Para resetar o banco, derrube o container (`docker compose down -v`) e suba novamente.
+- Backend: `mvn test` valida regras de negocio e consultas DAO.
+- Frontend: `npm run check` executa linters e testes unitarios.
+- Banco: utilize o acesso psql para executar consultas de avaliacao, por exemplo:
+  ```sql
+  SELECT d.sigla, avg(n.valor) AS media_notas
+  FROM departamento d
+  JOIN aluno a ON a.departamento_id = d.id
+  JOIN nota n ON n.aluno_id = a.id
+  GROUP BY d.sigla
+  ORDER BY media_notas DESC;
+  ```
+- Para testar gatilhos de consistencia, tente inserir uma nota cruzando departamentos distintos e verifique o erro `check_violation`.
+
+## Checklist para Entrega em BD2
+- [ ] README atualizado com contexto da disciplina e instrucoes de reproducao.
+- [ ] Migrations Flyway atualizadas com ultima versao do schema e seeds relevantes.
+- [ ] Scripts ou consultas adicionais documentados (quando houver views, funcoes ou relatorios).
+- [ ] Evidencias de testes automatizados e consultas manuais que comprovem integridade.
+- [ ] Registro de decisoes de modelagem anexado no relatorio final ou wiki da disciplina.
