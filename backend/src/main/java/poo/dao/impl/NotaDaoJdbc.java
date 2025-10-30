@@ -5,9 +5,11 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
+
 import poo.dao.NotaDao;
 import poo.model.Nota;
 
@@ -77,7 +79,6 @@ public class NotaDaoJdbc implements NotaDao {
     if (provaId != null) {
       sql.append(hasWhere ? " AND" : " WHERE").append(" prova_id = ?");
       params.add(provaId);
-      hasWhere = true;
     }
 
     sql.append(" ORDER BY prova_id, aluno_id");
