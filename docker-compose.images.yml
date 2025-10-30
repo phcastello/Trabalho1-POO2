@@ -1,5 +1,65 @@
+version: "3.9"
+
 services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: poo
+      POSTGRES_USER: poo_user
+      POSTGRES_PASSWORD: poo_pass
+      TZ: America/Sao_Paulo
+    ports:
+      - "55432:5432"
+    volumes:
+      - poo_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB -h 127.0.0.1 -p 5432"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   backend:
     image: ghcr.io/phcastello/trabalho1-backend:latest
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/poo
+      SPRING_DATASOURCE_USERNAME: poo_user
+      SPRING_DATASOURCE_PASSWORD: poo_pass
+      SPRING_FLYWAY_URL: jdbc:postgresql://db:5432/poo
+      SPRING_FLYWAY_USER: poo_user
+      SPRING_FLYWAY_PASSWORD: poo_pass
+    ports:
+      - "8080:8080"
+
   frontend:
     image: ghcr.io/phcastello/trabalho1-frontend:latest
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "5173:80"
+
+  info:
+    image: alpine:3.20
+    depends_on:
+      backend:
+        condition: service_started
+      frontend:
+        condition: service_started
+    command: >
+      sh -c '
+        echo "";
+        echo "==============================================";
+        echo "  Backend:  http://localhost:8080";
+        echo "  Frontend: http://localhost:5173";
+        echo "==============================================";
+        echo "";
+      '
+    restart: "no"
+
+volumes:
+  poo_db_data:

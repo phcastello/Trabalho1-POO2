@@ -51,11 +51,31 @@ Para evoluir o schema, adicione novos arquivos numerados em `backend/src/main/re
 ## Preparacao do Ambiente
 
 ### Execucao completa com Docker
-Com Docker instalado, basta rodar:
+
+#### Ambiente de desenvolvimento (build local)
 ```bash
 docker compose up --build
 ```
-Esse comando sobe Postgres, backend e frontend. A API fica em `http://localhost:8080/api` e a SPA em `http://localhost:5173`. Para desligar, use `docker compose down`.
+O Compose usa os `Dockerfile` de backend/frontend para construir as imagens localmente. A API responde em `http://localhost:8080/api` e a SPA em `http://localhost:5173`. Para desligar, use `docker compose down`.
+
+#### Consumir imagens publicadas (sem build)
+Disponibilizamos as imagens já empacotadas no GitHub Container Registry. Para subir tudo sem build local, utilize apenas o arquivo `docker-compose.images.yml`.
+
+
+#### Baixar apenas o compose de imagens
+Para quem quer usar somente as imagens publicadas, disponibilizamos o arquivo pronto, basta clicar no link abaixo e depois no símbolo de baixar:
+- [docker-compose.images.yml](https://github.com/phcastello/Trabalho1-POO2/blob/main/docker-compose.images.yml)
+
+Para dar pull executar:
+```bash
+docker compose -f docker-compose.images.yml up -d
+```
+
+Para desligar, use:
+```bash
+docker compose -f docker-compose.images.yml down
+```
+
 
 
 ### Execucao manual passo a passo
@@ -66,7 +86,7 @@ Esse comando sobe Postgres, backend e frontend. A API fica em `http://localhost:
    ```
    O Postgres fica exposto em `localhost:55432` (`poo_user` / `poo_pass`). Seeds sao aplicadas nas migrations do backend. Para acessar o banco diretamente:
    ```bash
-   docker exec -it poo_postgres psql -U poo_user -d poo
+   docker exec -it poo_postgres psql -U poo_user -d info` imprimepoo
    ```
 
 2. Backend
