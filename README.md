@@ -50,6 +50,16 @@ Para evoluir o schema, adicione novos arquivos numerados em `backend/src/main/re
 
 ## Preparacao do Ambiente
 
+### Execucao completa com Docker
+Com Docker instalado, basta rodar:
+```bash
+docker compose up --build
+```
+Esse comando sobe Postgres, backend e frontend. A API fica em `http://localhost:8080/api` e a SPA em `http://localhost:5173`. Para desligar, use `docker compose down`.
+
+
+### Execucao manual passo a passo
+
 1. Banco de dados
    ```bash
    docker compose -f infra/docker-compose-db.yml up -d

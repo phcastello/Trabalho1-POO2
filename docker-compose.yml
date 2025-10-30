@@ -1,0 +1,30 @@
+services:
+  db:
+    extends:
+      file: infra/docker-compose-db.yml
+      service: db
+
+  backend:
+    build: ./backend
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/poo
+      SPRING_DATASOURCE_USERNAME: poo_user
+      SPRING_DATASOURCE_PASSWORD: poo_pass
+      SPRING_FLYWAY_URL: jdbc:postgresql://db:5432/poo
+      SPRING_FLYWAY_USER: poo_user
+      SPRING_FLYWAY_PASSWORD: poo_pass
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+
+  frontend:
+    build: ./frontend
+    depends_on:
+      - backend
+    ports:
+      - "5173:80"
+
+volumes:
+  poo_db_data:
