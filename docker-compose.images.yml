@@ -1,0 +1,5 @@
+services:
+  backend:
+    image: ghcr.io/phcastello/trabalho1-backend:latest
+  frontend:
+    image: ghcr.io/phcastello/trabalho1-frontend:latest
