@@ -86,25 +86,3 @@ Esse comando sobe Postgres, backend e frontend. A API fica em `http://localhost:
    npm run dev
    ```
    Acesse `http://localhost:5173`. Ajuste `VITE_API_BASE_URL` no `.env.local` para apontar para a API quando necessario.
-
-## Rotinas de Validacao
-
-- Backend: `mvn test` valida regras de negocio e consultas DAO.
-- Frontend: `npm run check` executa linters e testes unitarios.
-- Banco: utilize o acesso psql para executar consultas de avaliacao, por exemplo:
-  ```sql
-  SELECT d.sigla, avg(n.valor) AS media_notas
-  FROM departamento d
-  JOIN aluno a ON a.departamento_id = d.id
-  JOIN nota n ON n.aluno_id = a.id
-  GROUP BY d.sigla
-  ORDER BY media_notas DESC;
-  ```
-- Para testar gatilhos de consistencia, tente inserir uma nota cruzando departamentos distintos e verifique o erro `check_violation`.
-
-## Checklist para Entrega em BD2
-- [ ] README atualizado com contexto da disciplina e instrucoes de reproducao.
-- [ ] Migrations Flyway atualizadas com ultima versao do schema e seeds relevantes.
-- [ ] Scripts ou consultas adicionais documentados (quando houver views, funcoes ou relatorios).
-- [ ] Evidencias de testes automatizados e consultas manuais que comprovem integridade.
-- [ ] Registro de decisoes de modelagem anexado no relatorio final ou wiki da disciplina.
