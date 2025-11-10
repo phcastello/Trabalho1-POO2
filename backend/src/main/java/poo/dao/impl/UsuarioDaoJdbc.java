@@ -4,6 +4,7 @@ import poo.dao.UsuarioDao;
 import poo.model.Usuario;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Repository;
 
 import java.util.*;
@@ -14,7 +15,7 @@ public class UsuarioDaoJdbc implements UsuarioDao {
   private final JdbcTemplate jdbc;
   public UsuarioDaoJdbc(JdbcTemplate jdbc) { this.jdbc = jdbc; }
 
-  private static final RowMapper<Usuario> RM = (rs, i) -> {
+  private static final @NonNull RowMapper<Usuario> RM = (rs, i) -> {
     Usuario u = new Usuario();
     u.setId(rs.getLong("id"));
     u.setUsername(rs.getString("username"));

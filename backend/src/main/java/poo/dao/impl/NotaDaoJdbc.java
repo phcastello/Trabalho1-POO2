@@ -5,20 +5,35 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Repository;
-
 import poo.dao.NotaDao;
 import poo.model.Nota;
 
 @Repository
 public class NotaDaoJdbc implements NotaDao {
 
-  private static final String COLUMNS = "aluno_id, prova_id, valor, observacao, created_at, updated_at";
+  private static final @NonNull String COLUMNS =
+      nonNull("aluno_id, prova_id, valor, observacao, created_at, updated_at");
+  private static final @NonNull String INSERT_SQL = nonNull("""
+      INSERT INTO nota (aluno_id, prova_id, valor, observacao)
+      VALUES (?, ?, ?, ?)
+      RETURNING %s
+    """.formatted(COLUMNS));
+  private static final @NonNull String SELECT_BY_ID_SQL = nonNull("""
+      SELECT %s FROM nota
+      WHERE aluno_id = ? AND prova_id = ?
+    """.formatted(COLUMNS));
+  private static final @NonNull String UPDATE_SQL = nonNull("""
+      UPDATE nota
+      SET valor = ?, observacao = ?
+      WHERE aluno_id = ? AND prova_id = ?
+      RETURNING %s
+    """.formatted(COLUMNS));
 
-  private static final RowMapper<Nota> ROW_MAPPER = (rs, rowNum) -> {
+  private static final @NonNull RowMapper<Nota> ROW_MAPPER = (rs, rowNum) -> {
     Nota nota = new Nota();
     nota.setAlunoId(rs.getLong("aluno_id"));
     nota.setProvaId(rs.getLong("prova_id"));
@@ -44,11 +59,7 @@ public class NotaDaoJdbc implements NotaDao {
 
   @Override
   public Nota create(Nota nota) {
-    return jdbc.queryForObject("""
-      INSERT INTO nota (aluno_id, prova_id, valor, observacao)
-      VALUES (?, ?, ?, ?)
-      RETURNING %s
-    """.formatted(COLUMNS), ROW_MAPPER,
+    return jdbc.queryForObject(INSERT_SQL, ROW_MAPPER,
       nota.getAlunoId(),
       nota.getProvaId(),
       nota.getValor(),
@@ -58,10 +69,7 @@ public class NotaDaoJdbc implements NotaDao {
 
   @Override
   public Optional<Nota> findById(Long alunoId, Long provaId) {
-    List<Nota> list = jdbc.query("""
-      SELECT %s FROM nota
-      WHERE aluno_id = ? AND prova_id = ?
-    """.formatted(COLUMNS), ROW_MAPPER, alunoId, provaId);
+    List<Nota> list = jdbc.query(SELECT_BY_ID_SQL, ROW_MAPPER, alunoId, provaId);
     return list.stream().findFirst();
   }
 
@@ -82,17 +90,12 @@ public class NotaDaoJdbc implements NotaDao {
     }
 
     sql.append(" ORDER BY prova_id, aluno_id");
-    return jdbc.query(sql.toString(), ROW_MAPPER, params.toArray());
+    return jdbc.query(nonNull(sql.toString()), ROW_MAPPER, params.toArray());
   }
 
   @Override
   public Optional<Nota> update(Nota nota) {
-    List<Nota> list = jdbc.query("""
-      UPDATE nota
-      SET valor = ?, observacao = ?
-      WHERE aluno_id = ? AND prova_id = ?
-      RETURNING %s
-    """.formatted(COLUMNS), ROW_MAPPER,
+    List<Nota> list = jdbc.query(UPDATE_SQL, ROW_MAPPER,
       nota.getValor(),
       nota.getObservacao(),
       nota.getAlunoId(),
@@ -104,5 +107,13 @@ public class NotaDaoJdbc implements NotaDao {
   @Override
   public boolean delete(Long alunoId, Long provaId) {
     return jdbc.update("DELETE FROM nota WHERE aluno_id = ? AND prova_id = ?", alunoId, provaId) > 0;
+  }
+
+  @NonNull
+  private static <T> T nonNull(T value) {
+    if (value == null) {
+      throw new IllegalStateException("Unexpected null value");
+    }
+    return value;
   }
 }
