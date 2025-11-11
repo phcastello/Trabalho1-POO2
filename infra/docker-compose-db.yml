@@ -17,9 +17,6 @@ services:
     volumes:
       # Dados persistentes
       - poo_db_data:/var/lib/postgresql/data
-      # Scripts .sql / .sh executados automaticamente no primeiro start
-      # Coloque aqui seeds de desenvolvimento (ex.: 001_seed.sql)
-      - ./db/init:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB -h 127.0.0.1 -p 5432"]
       interval: 10s

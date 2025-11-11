@@ -13,7 +13,7 @@
   </parent>
 
   <!-- Estas coordenadas são do artefato (não têm relação com o "package" das classes) -->
-  <groupId>com.exemplo</groupId>
+  <groupId>poo</groupId>
   <artifactId>poo-backend</artifactId>
   <version>0.0.1-SNAPSHOT</version>
   <name>poo-backend</name>
@@ -22,6 +22,8 @@
 
   <properties>
     <java.version>21</java.version>
+    <flyway.locations>filesystem:${project.basedir}/src/main/resources/db/migration</flyway.locations>
+    <flyway.maven.plugin.version>10.17.3</flyway.maven.plugin.version>
   </properties>
 
   <dependencies>
@@ -74,6 +76,16 @@
         <artifactId>spring-boot-maven-plugin</artifactId>
         <configuration>
           <mainClass>poo.PooApplication</mainClass>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.flywaydb</groupId>
+        <artifactId>flyway-maven-plugin</artifactId>
+        <version>${flyway.maven.plugin.version}</version>
+        <configuration>
+          <locations>
+            <location>${flyway.locations}</location>
+          </locations>
         </configuration>
       </plugin>
     </plugins>
