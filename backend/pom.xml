@@ -23,7 +23,6 @@
   <properties>
     <java.version>21</java.version>
     <flyway.locations>filesystem:${project.basedir}/src/main/resources/db/migration</flyway.locations>
-    <flyway.maven.plugin.version>10.17.3</flyway.maven.plugin.version>
   </properties>
 
   <dependencies>
@@ -60,6 +59,12 @@
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-validation</artifactId>
     </dependency>
+    <!-- Swagger/OpenAPI UI -->
+    <dependency>
+      <groupId>org.springdoc</groupId>
+      <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+      <version>2.6.0</version>
+    </dependency>
 
     <!-- Testes -->
     <dependency>
@@ -76,16 +81,6 @@
         <artifactId>spring-boot-maven-plugin</artifactId>
         <configuration>
           <mainClass>poo.PooApplication</mainClass>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.flywaydb</groupId>
-        <artifactId>flyway-maven-plugin</artifactId>
-        <version>${flyway.maven.plugin.version}</version>
-        <configuration>
-          <locations>
-            <location>${flyway.locations}</location>
-          </locations>
         </configuration>
       </plugin>
     </plugins>

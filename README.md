@@ -1,52 +1,68 @@
-# Trabalho Final - Banco de Dados 2
+# Trabalho Final - Programacao Orientada a Objetos 2 (POO2)
 
-Este repositorio consolida a solucao full-stack usada como projeto final da disciplina de Banco de Dados 2. O foco e demonstrar modelagem relacional, integridade transacional e automatizacao do ciclo de vida do banco de dados, enquanto o backend e o frontend funcionam como camadas de apoio para exercitar consultas e cenarios de uso.
+Este repositorio reune a solucao full-stack desenvolvida para o trabalho final da disciplina de Programacao Orientada a Objetos 2. A aplicacao simula um portal academico simplificado e serve como laboratorio para praticar arquitetura em camadas, encapsulamento de regras de negocio e integracao com um banco relacional.
+
+A avaliacao enfatiza boas praticas de OO: as entidades e DTOs representam o dominio, enquanto controllers, services e DAOs demonstram como aplicar SOLID em um projeto realista. O banco de dados, o frontend e a infraestrutura Docker entram como suporte para exercitar e validar esses conceitos.
 
 ## Visao Geral da Solucao
-- `backend/`: API REST Spring Boot com camada de servico e DAOs JDBC. As migrations Flyway versionam o schema e garantem reproducao do estado do banco.
-- `frontend/`: SPA criada com Vue 3 + Pinia que consome a API e permite validar regras de negocio, fluxos de cadastro e consultas.
-- `infra/`: orquestracao Docker Compose para provisionar Postgres e demais dependencias de banco.
-- `docs/`: diagramas UML aproveitados na disciplina para justificar escolhas de arquitetura e fluxo de dados.
+- `backend/`: API REST com Spring Boot. Controllers expõem endpoints HTTP, services concentram regras e DAOs JDBC executam SQL versionado por Flyway.
+- `frontend/`: SPA Vue 3 + Pinia usada para testar fluxos de cadastro, listagem e autenticacao simulada.
+- `infra/`: definicoes Docker Compose que sobem Postgres e demais dependencias locais.
+- `docs/`: diagramas UML, relatorio e referencias utilizadas durante a disciplina de POO2.
 
-## Objetivo Academico e Entregaveis
-- Modelagem conceitual e logica das entidades academicas (departamento, aluno, prova, nota e usuario).
-- Aplicacao de restricoes, referencias e gatilhos que asseguram integridade entre dominios.
-- Scripts reproduziveis (Flyway + Docker) para criar, popular e observar o banco de dados.
-- Endpoints REST e interface web que expõem cenarios de consultas, escritas concorrentes e politicas de autenticacao.
-- Guia de validacao com comandos SQL e testes automatizados que suportam a avaliacao da disciplina.
+## Objetivos de Aprendizagem
+- Consolidar principios de OO (encapsulamento, responsabilidade unica, inversao de dependencia) aplicados a um dominio universitario.
+- Implementar MVC + DAO manualmente, explorando interfaces e injecao de dependencias do Spring em vez de abstrair tudo com ORMs.
+- Demonstrar como regras de negocio e validacoes residem em services, separando-as das camadas de transporte e persistencia.
+- Entregar uma API REST e uma SPA que permitam testar as funcionalidades e observar o comportamento das camadas.
 
-## Destaques de Banco de Dados
-- Schema normalizado com indices pensados para consultas por departamento, email e composicao aluno-prova.
-- Gatilhos em PL/pgSQL (`set_updated_at`, `check_nota_mesmo_departamento`) que registram auditoria e impedem inconsistencias entre departamentos.
-- Uso de `pgcrypto` para hash de senha, demonstrando boas praticas de armazenamento seguro.
-- Seeds controlados por Flyway que criam um conjunto minimamente realista de departamentos, alunos, provas e notas para experimentos.
-- Estrutura preparada para testar funcoes agregadas, janelas e visoes (ver instrucoes em `backend/src/main/resources/db/migration` para adicionar novas versoes Flyway).
+## Conceitos e Tecnicas de POO aplicados
+- Camadas `Controller -> Service -> DAO` desacopladas por interfaces (`AlunoService`, `AlunoDao`, etc.) para facilitar testes e evolucao.
+- DAOs implementados com `JdbcTemplate` e `RowMapper`, demonstrando o padrao DAO em cima de SQL parametrizado.
+- Services encapsulam regras (unicidade de RA/email, protecao contra exclusoes com dependencias) e traduzem excecoes de infraestrutura para respostas HTTP coesas.
+- DTOs com Bean Validation garantem pre-condicoes antes de delegar para o dominio.
+- Uso de `HttpSession` para ilustrar autenticacao baseada em sessao e como o estado do usuario pode ser consumido pelos controllers.
+- Documentacao automatica com Swagger/OpenAPI para reforcar contratos e facilitar exploracao dos endpoints.
 
-## Arquitetura e Modelagem
+## Dominio e Funcionalidades
+- Entidades principais: `departamento`, `aluno`, `prova`, `nota` e `usuario`.
+- CRUD completo para departamentos, alunos, provas e notas, expondo validacoes como RA unico, relacao aluno-departamento e consistencia entre provas/notas.
+- Endpoint `GET /api/health` para verificacao rapida do backend.
+- Fluxo simples de autenticacao (`/api/auth/login`, `/api/auth/me`, `/api/auth/logout`) que demonstra como persistir informacoes do usuario na sessao.
+
+## Arquitetura e Diagramas
 
 ### MVC + DAO (backend)
 ![Diagrama MVC e DAO](docs/uml/mvc-dao.png)
 
-O desenho destaca a separacao de responsabilidades adotada no backend. Controllers recebem as chamadas HTTP e delegam regras para services, enquanto os DAOs concentram acesso JDBC e consultas SQL parametrizadas. Essa estrutura facilita mapear as operacoes CRUD para comandos SQL versionados nas migrations.
+O diagrama realca a divisao em camadas pedida na disciplina: controllers tratam HTTP, services isolam regras de negocio e DAOs controlam o acesso a dados. Essa separacao facilita evoluir regras de OO sem acoplar transporte e persistencia.
 
 ### Sequencia de criacao de aluno
 ![Diagrama de sequencia - Criar Aluno](docs/uml/sequence-criar-aluno.png)
 
-O diagrama acompanha o fluxo completo de cadastro: do formulario no frontend ao commit da transacao SQL. Ele evidencia os pontos em que validacoes de negocio cruzam com restricoes do banco (unicidade de RA, verificacao de departamento e gatilho de consistencia).
+O fluxo destaca a conversa entre frontend, controller, service e DAO na insercao de um aluno. O objetivo e evidenciar os pontos em que validacoes de dominio acontecem antes de efetivar a transacao no banco.
+
+## Estado da Autenticacao
+- As rotas de negocio (`/api/alunos`, `/api/departamentos`, etc.) nao verificam a sessao e podem ser chamadas sem realizar login.
+- O login em `/api/auth/login` apenas grava `userId`/`userName` na sessao para que `/api/auth/me` consiga identificar o usuario atual.
+- O projeto nao inclui Spring Security ou interceptadores; por isso, o fluxo de autenticacao serve apenas como mock para a disciplina.
+- Para tornar o login obrigatorio, adicione um mecanismo de seguranca real (Spring Security, JWT ou um `HandlerInterceptor` que rejeite requisicoes sem `userId`).
 
 ## Scripts de Migracao (Flyway)
-- `V1__init.sql`: cria funcoes auxiliares, tabelas `departamento` e `aluno`, alem de indices e gatilhos de auditoria.
-- `V2__provas_notas.sql`: adiciona `prova` e `nota`, assegurando integridade com verificacao de departamento e restricoes de dominio.
-- `V3__auth_usuario.sql`: habilita `pgcrypto` e cria a tabela `usuario` com hash de senha Bcrypt.
-- `V4__seed_dados_iniciais.sql`: popula dados de referencia para execucao de consultas, relatorios e testes de escrita.
+Mesmo com o foco voltado para POO, mantemos o schema do Postgres versionado para garantir reproducao do ambiente.
 
-Para evoluir o schema, adicione novos arquivos numerados em `backend/src/main/resources/db/migration`. Cada script sera aplicado automaticamente na inicializacao do backend ou via `mvn flyway:migrate`.
+- `V1__init.sql`: funcoes auxiliares, tabelas `departamento` e `aluno`, indices e gatilhos de auditoria.
+- `V2__provas_notas.sql`: cria `prova` e `nota`, assegurando integridade entre departamentos.
+- `V3__auth_usuario.sql`: habilita `pgcrypto` e registra `usuario` com hash BCrypt.
+- `V4__seed_dados_iniciais.sql`: popula dados de referencia para testar os fluxos.
+
+Novas evolucoes devem ser adicionadas em `backend/src/main/resources/db/migration` ou `infra/db/migrations`. As migrations sao aplicadas automaticamente ao subir o backend ou via `mvn flyway:migrate`.
 
 ## Requisitos de Ambiente
 - Java 21 e Maven
 - Node.js 18+ e npm
 - Docker e Docker Compose
-- Opcional: psql ou outro client SQL para inspecao manual
+- Opcional: psql ou outro cliente SQL para inspecao manual
 
 ## Preparacao do Ambiente
 
@@ -56,27 +72,24 @@ Para evoluir o schema, adicione novos arquivos numerados em `backend/src/main/re
 ```bash
 docker compose up --build
 ```
-O Compose usa os `Dockerfile` de backend/frontend para construir as imagens localmente. A API responde em `http://localhost:8080/api` e a SPA em `http://localhost:5173`. Para desligar, use `docker compose down`.
+O Compose utiliza os `Dockerfile` do backend e do frontend para gerar as imagens locais. A API responde em `http://localhost:8080/api` e a SPA em `http://localhost:5173`. Para desligar, execute `docker compose down`.
 
 #### Consumir imagens publicadas (sem build)
-Disponibilizamos as imagens já empacotadas no GitHub Container Registry. Para subir tudo sem build local, utilize apenas o arquivo `docker-compose.images.yml`.
-
+Disponibilizamos imagens prontas no GitHub Container Registry. Utilize `docker-compose.images.yml` para baixa-las e subir o ambiente sem build local.
 
 #### Baixar apenas o compose de imagens
-Para quem quer usar somente as imagens publicadas, disponibilizamos o arquivo pronto, basta clicar no link abaixo e depois no símbolo de baixar:
+Para usar somente as imagens publicadas, clique no link abaixo e baixe o arquivo:
 - [docker-compose.images.yml](https://github.com/phcastello/Trabalho1-POO2/blob/main/docker-compose.images.yml)
 
-Para dar pull executar:
+Para subir:
 ```bash
 docker compose -f docker-compose.images.yml up -d
 ```
 
-Para desligar, use:
+Para desligar:
 ```bash
 docker compose -f docker-compose.images.yml down
 ```
-
-
 
 ### Execucao manual passo a passo
 
@@ -84,9 +97,9 @@ docker compose -f docker-compose.images.yml down
    ```bash
    docker compose -f infra/docker-compose-db.yml up -d
    ```
-   O Postgres fica exposto em `localhost:55432` (`poo_user` / `poo_pass`). Seeds sao aplicadas nas migrations do backend. Para acessar o banco diretamente:
+   O Postgres fica exposto em `localhost:55432` (`poo_user` / `poo_pass`). Seeds sao aplicadas pelas migrations do backend. Para acessar diretamente:
    ```bash
-   docker exec -it poo_postgres psql -U poo_user -d info` imprimepoo
+   docker exec -it poo_postgres psql -U poo_user -d poo
    ```
 
 2. Backend
@@ -94,10 +107,11 @@ docker compose -f docker-compose.images.yml down
    cd backend
    mvn spring-boot:run
    ```
-   A API estara disponivel em `http://localhost:8080/api`. Endpoints principais:
+   A API fica disponivel em `http://localhost:8080/api`. Endpoints principais:
    - `GET /api/health` para verificar disponibilidade
    - `POST /api/auth/login` para autenticar (usuario `admin` / `senha123`)
-   - CRUDs relacionados a `alunos`, `departamentos`, `provas` e `notas`
+   - CRUD de `alunos`, `departamentos`, `provas` e `notas`
+   - Swagger UI em `http://localhost:8080/swagger-ui.html`
 
 3. Frontend
    ```bash
@@ -105,4 +119,4 @@ docker compose -f docker-compose.images.yml down
    npm install
    npm run dev
    ```
-   Acesse `http://localhost:5173`. Ajuste `VITE_API_BASE_URL` no `.env.local` para apontar para a API quando necessario.
+   Acesse `http://localhost:5173`. Ajuste `VITE_API_BASE_URL` no `.env.local` caso a API esteja em outro host.
