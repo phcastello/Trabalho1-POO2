@@ -1,0 +1,61 @@
+@startuml
+hide circle
+skinparam classAttributeIconSize 0
+
+' ===== ENTIDADES =====
+class Departamento <<Entity>> {
+  +id: Long {id}
+  +nome: String {unique}
+  +sigla: String [0..1] {len 1..10}
+}
+
+class Aluno <<Entity>> {
+  +id: Long {id}
+  +ra: String {unique}
+  +nome: String
+  +email: String [0..1] {unique, case-insensitive}
+  +dataNascimento: LocalDate [0..1]
+}
+
+class Prova <<Entity>> {
+  +id: Long {id}
+  +titulo: String
+  +data: LocalDate
+  +descricao: String [0..1]
+}
+
+class Nota <<Entity>> {
+  +valor: BigDecimal {0..10}
+  +observacao: String [0..1]
+  -- Regras de negócio --
+  +atribuirValor(n: BigDecimal)
+}
+
+class Usuario <<Entity>> {
+  +id: Long {id}
+  +username: String {unique}
+  +nome: String
+  +passwordHash: String
+}
+
+' ===== RELACIONAMENTOS =====
+Departamento "1" -- "0..*" Aluno
+Departamento "1" -- "0..*" Prova
+
+Aluno "1" -- "0..*" Nota : recebe >
+Prova "1" -- "0..*" Nota : avalia >
+
+' ===== NOTAS / INVARIANTES =====
+note as N1
+{unique} Nota(aluno, prova)
+valor ∈ [0, 10]
+Aluno e Prova devem pertencer ao mesmo Departamento
+end note
+Nota .. N1
+
+note as N2
+{unique} Prova(departamento, titulo, data)
+end note
+Prova .. N2
+
+@enduml

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<diagram version="1" name="DiagramaER-BD_POO">
+	<entities>
+		<data-source id="postgres-jdbc-19a0882ed35-4d73e424d4f9a665">
+			<entity id="1" name="aluno" fq-name="public.aluno">
+				<path name="public"/>
+				<path name="poo"/>
+			</entity>
+			<entity id="2" name="departamento" fq-name="public.departamento">
+				<path name="public"/>
+				<path name="poo"/>
+			</entity>
+			<entity id="3" name="flyway_schema_history" fq-name="public.flyway_schema_history">
+				<path name="public"/>
+				<path name="poo"/>
+			</entity>
+			<entity id="4" name="nota" fq-name="public.nota">
+				<path name="public"/>
+				<path name="poo"/>
+			</entity>
+			<entity id="5" name="prova" fq-name="public.prova">
+				<path name="public"/>
+				<path name="poo"/>
+			</entity>
+			<entity id="6" name="usuario" fq-name="public.usuario">
+				<path name="public"/>
+				<path name="poo"/>
+			</entity>
+		</data-source>
+	</entities>
+	<relations>
+		<relation name="fk_nota_aluno" fq-name="public.nota.fk_nota_aluno" type="fk" pk-ref="1" fk-ref="4"/>
+		<relation name="fk_aluno_departamento" fq-name="public.aluno.fk_aluno_departamento" type="fk" pk-ref="2" fk-ref="1"/>
+		<relation name="fk_prova_departamento" fq-name="public.prova.fk_prova_departamento" type="fk" pk-ref="2" fk-ref="5"/>
+		<relation name="fk_nota_prova" fq-name="public.nota.fk_nota_prova" type="fk" pk-ref="5" fk-ref="4"/>
+	</relations>
+</diagram>
