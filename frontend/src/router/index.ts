@@ -5,6 +5,7 @@ import AlunosView from "@/views/AlunosView.vue";
 import DepartamentosView from "@/views/DepartamentosView.vue";
 import ProvasView from "@/views/ProvasView.vue";
 import NotasView from "@/views/NotasView.vue";
+import ConsultasAvancadasView from "@/views/ConsultasAvancadasView.vue";
 import { useAuth } from "@/store/auth";
 
 const router = createRouter({
@@ -16,6 +17,7 @@ const router = createRouter({
     { path: "/departamentos", component: DepartamentosView },
     { path: "/provas", component: ProvasView },
     { path: "/notas", component: NotasView },
+    { path: "/consultas", name: "consultas", component: ConsultasAvancadasView },
     { path: "/", redirect: "/dashboard" }
   ],
 });

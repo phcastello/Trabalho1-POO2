@@ -70,6 +70,57 @@ Por se tratar de um trabalho conjunto de POO2 e BD2, o schema do Postgres perman
 
 Novas evoluções devem ser adicionadas em `backend/src/main/resources/db/migration` ou `infra/db/migrations`. As migrations são aplicadas automaticamente ao subir o backend ou via `mvn flyway:migrate`, servindo como base oficial para as entregas de BD2.
 
+## Consultas Avançadas (Requisito 7)
+As três consultas solicitadas por BD2 estão versionadas em `docs/sql/consultas_avancadas.sql` e expostas pelo endpoint `GET /api/consultas-avancadas`, consumido pela SPA na rota `/consultas`. O comando abaixo executa todas elas diretamente no Postgres provisionado via `infra/docker-compose-db.yml`:
+
+```bash
+PGPASSWORD=poo_pass psql -h localhost -p 55432 -U poo_user -d poo -f docs/sql/consultas_avancadas.sql
+```
+
+### 1. Ranking de desempenho por departamento (funções agregadas)
+- **Objetivo:** priorizar os departamentos com melhor média, maior amplitude de notas e maior volume de lançamentos para relatórios de desempenho.
+- **SQL:** primeira consulta do arquivo `docs/sql/consultas_avancadas.sql` e campo `rankingDepartamentos` da API.
+- **Saída esperada (seed atual):**
+
+```
+ departamento_id |   departamento_nome    | media_notas | menor_nota | maior_nota | alunos_avaliados | notas_lancadas 
+-----------------+------------------------+-------------+------------+------------+------------------+----------------
+               3 | Matematica Aplicada    |        9.10 |       9.10 |       9.10 |                1 |              1
+               1 | Ciencias da Computacao |        8.45 |       7.20 |       9.30 |                2 |              4
+               2 | Engenharia Eletrica    |        7.20 |       6.50 |       7.90 |                2 |              2
+```
+
+### 2. Alunos com entrega equilibrada (operador de conjunto `INTERSECT`)
+- **Objetivo:** identificar estudantes que receberam notas tanto em provas tradicionais (títulos contendo “Prova”) quanto em projetos práticos, elegíveis a monitorias.
+- **SQL:** segunda consulta do arquivo e campo `alunosModalidades`.
+- **Saída esperada (seed atual):**
+
+```
+ aluno_id |   ra    |    nome     |   departamento_nome    | avaliacoes_prova | projetos_entregues 
+----------+---------+-------------+------------------------+------------------+--------------------
+        1 | 2023001 | Ana Pereira | Ciencias da Computacao |                1 |                  1
+        2 | 2023002 | Bruno Lima  | Ciencias da Computacao |                1 |                  1
+```
+
+### 3. Cobertura de notas por aluno (junção externa `LEFT JOIN`)
+- **Objetivo:** listar todos os alunos, inclusive quem ainda não recebeu notas, destacando a quantidade de avaliações e a média parcial de cada um.
+- **SQL:** terceira consulta do arquivo e campo `coberturaNotas`.
+- **Saída esperada (seed atual + cadastros feitos na disciplina):**
+
+```
+ aluno_id |     ra      |     nome      |   departamento_nome    | provas_avaliadas | media_notas | sem_notas 
+----------+-------------+---------------+------------------------+------------------+-------------+-----------
+       39 | 57024740011 | ADdasd        | Ciencias da Computacao |                0 |        0.00 | t
+        1 | 2023001     | Ana Pereira   | Ciencias da Computacao |                2 |        8.90 | f
+        2 | 2023002     | Bruno Lima    | Ciencias da Computacao |                2 |        8.00 | f
+        3 | 2023101     | Carla Menezes | Engenharia Eletrica    |                1 |        7.90 | f
+        4 | 2023102     | Diego Santos  | Engenharia Eletrica    |                1 |        6.50 | f
+        5 | 2023201     | Eva Martins   | Matematica Aplicada    |                1 |        9.10 | f
+```
+
+### Visualização no frontend
+- Após autenticar na SPA, acesse o menu **Consultas** para ver gráficos e tabelas com os mesmos dados retornados pela API, incluindo estados de carregamento/erro e botões de atualização.
+
 ## Requisitos de Ambiente
 - Java 21 e Maven
 - Node.js 18+ e npm
@@ -107,7 +158,7 @@ docker compose -f docker-compose.images.yml down
 
 1. Banco de dados
    ```bash
-   docker compose -f infra/docker-compose-db.yml up -d
+    
    ```
    O Postgres fica exposto em `localhost:55432` (`poo_user` / `poo_pass`). Seeds são aplicadas pelas migrations do backend. Para acessar diretamente:
    ```bash

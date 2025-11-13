@@ -29,6 +29,7 @@ async function logout() {
         <RouterLink to="/departamentos" class="nav-link">Departamentos</RouterLink>
         <RouterLink to="/provas" class="nav-link">Provas</RouterLink>
         <RouterLink to="/notas" class="nav-link">Notas</RouterLink>
+        <RouterLink to="/consultas" class="nav-link">Consultas</RouterLink>
       </nav>
 
       <div class="user-chip">

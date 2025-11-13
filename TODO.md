@@ -1,12 +1,12 @@
 # TODO – Pendências do Trabalho Integrado
 
-- [ ] **Consultas Avançadas (Requisito 7)**
-  - **Situação:** Falta documentar e versionar as três consultas SQL exigidas (agregação, operador de conjunto e junção externa).
+- [x] **Consultas Avançadas (Requisito 7)**
+  - **Situação:** Falta documentar e versionar as três consultas SQL exigidas (1 usando funções agregadas, 1 usando operador de conjunto, 1 usando junção externa).
   - **Checklist:**
-    - [ ] Definir cenários de negócio que justifiquem cada consulta (ex.: ranking de médias, alunos sem notas, interseção entre departamentos).
-    - [ ] Escrever os SQLs diretamente em `docs/sql/consultas_avancadas.sql` ou em uma migration ilustrativa para fins de documentação.
-    - [ ] Validar os resultados executando contra o Postgres provisionado via `infra/docker-compose-db.yml` (ou `mvn flyway:migrate` + `psql`).
-    - [ ] Incluir a descrição e a saída esperada no README ou em um anexo do relatório para comprovar o requisito.
+    - [x] Definir cenários de negócio que justifiquem cada consulta (ex.: ranking de médias, alunos sem notas, interseção entre departamentos).
+    - [x] Escrever os SQLs diretamente em `docs/sql/consultas_avancadas.sql` ou em uma migration ilustrativa para fins de documentação.
+    - [x] Validar os resultados executando contra o Postgres provisionado via `infra/docker-compose-db.yml` (ou `mvn flyway:migrate` + `psql`).
+    - [x] Incluir a descrição e a saída esperada no README ou em um anexo do relatório para comprovar o requisito.
 
 - [ ] **Evidências do Plano de Teste para as Consultas**
   - **Situação:** Ao adicionar as consultas, será necessário mostrar como foram verificadas.

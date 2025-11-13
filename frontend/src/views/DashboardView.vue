@@ -7,6 +7,7 @@ import { useAlunos } from "@/store/alunos";
 import { useDepartamentos } from "@/store/departamentos";
 import { useProvas } from "@/store/provas";
 import { useNotas } from "@/store/notas";
+import { useConsultas } from "@/store/consultas";
 
 const auth = useAuth();
 const alunosStore = useAlunos();
@@ -41,6 +42,13 @@ const {
   initialized: notasInitialized,
   lastError: notasError,
 } = storeToRefs(notasStore);
+const consultasStore = useConsultas();
+const {
+  resumo: consultasResumo,
+  loading: consultasLoading,
+  lastError: consultasError,
+  initialized: consultasInitialized,
+} = storeToRefs(consultasStore);
 
 const firstName = computed(() => {
   const fullName = auth.user?.nome ?? "coordenador";
@@ -52,6 +60,7 @@ onMounted(() => {
   departamentosStore.fetch().catch(() => undefined);
   provasStore.fetch().catch(() => undefined);
   notasStore.fetch({}).catch(() => undefined);
+  consultasStore.fetch().catch(() => undefined);
 });
 
 const alunosCardValue = computed(() => {
@@ -134,6 +143,19 @@ function formatRelativeDays(days: number) {
   if (days === 1) return "Amanhã";
   return `Em ${days} dias`;
 }
+
+const consultasHighlights = computed(() => {
+  if (!consultasResumo.value) return null;
+  const [topDepartamento] = consultasResumo.value.rankingDepartamentos;
+  const alunosEquilibrados = consultasResumo.value.alunosModalidades.length;
+  const alunosSemNotas = consultasResumo.value.coberturaNotas.filter((aluno) => aluno.semNotas).length;
+
+  return {
+    topDepartamento,
+    alunosEquilibrados,
+    alunosSemNotas,
+  };
+});
 
 const analyticsError = computed(
   () => alunosError.value ?? departamentosError.value ?? provasError.value ?? notasError.value
@@ -520,6 +542,11 @@ const dashboardInsights = computed(() => {
     </div>
 
     <div class="quick-actions">
+      <RouterLink to="/consultas" class="quick-action">
+        <span>Consultas avançadas</span>
+        <p>Visualize as consultas de BD2 com agregações, INTERSECT e junções externas.</p>
+      </RouterLink>
+
       <RouterLink to="/alunos" class="quick-action">
         <span>Gerenciar alunos</span>
         <p>Cadastre novos discentes, organize turmas e ajuste dados básicos.</p>
@@ -630,6 +657,51 @@ const dashboardInsights = computed(() => {
               <span class="distribution-percentage">{{ bucket.percentageLabel }}</span>
             </li>
           </ul>
+        </article>
+      </div>
+    </section>
+
+    <section class="consultas-preview">
+      <header class="consultas-preview-header">
+        <div>
+          <span class="pill">Consultas avançadas</span>
+          <h2>Resumo rápido do requisito 7</h2>
+          <p>
+            Veja quais departamentos lideram o ranking, quantos alunos equilibram provas e projetos e quem ainda está sem
+            notas. Abra o painel completo para explorar cada tabela em detalhes.
+          </p>
+        </div>
+        <RouterLink to="/consultas" class="button-link">Abrir painel completo</RouterLink>
+      </header>
+
+      <div v-if="consultasError" class="alert alert-error compact">
+        <strong>Consultas indisponíveis.</strong>
+        <span>{{ consultasError }}</span>
+      </div>
+      <div v-else-if="!consultasInitialized || consultasLoading" class="consulta-preview-loader">
+        Carregando consultas avançadas...
+      </div>
+      <div v-else class="consultas-preview-grid">
+        <article class="consultas-preview-card">
+          <p class="preview-label">Departamento destaque</p>
+          <h3>{{ consultasHighlights?.topDepartamento?.departamentoNome ?? "Sem dados" }}</h3>
+          <p class="preview-note" v-if="consultasHighlights?.topDepartamento">
+            Média {{ formatNotaValor(consultasHighlights.topDepartamento.mediaNotas) }} com
+            {{ pluralize(consultasHighlights.topDepartamento.notasLancadas, "lançamento", "lançamentos") }}.
+          </p>
+          <p v-else class="preview-note">Cadastre notas para gerar o ranking.</p>
+        </article>
+
+        <article class="consultas-preview-card">
+          <p class="preview-label">Alunos equilibrados</p>
+          <h3>{{ consultasHighlights?.alunosEquilibrados ?? 0 }}</h3>
+          <p class="preview-note">Participaram de provas e projetos (consulta com INTERSECT).</p>
+        </article>
+
+        <article class="consultas-preview-card">
+          <p class="preview-label">Alunos sem notas</p>
+          <h3>{{ consultasHighlights?.alunosSemNotas ?? 0 }}</h3>
+          <p class="preview-note">Detectados via LEFT JOIN para priorizar cobranças.</p>
         </article>
       </div>
     </section>
