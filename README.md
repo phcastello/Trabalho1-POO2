@@ -42,6 +42,13 @@ Na dimensão de POO2, a avaliação enfatiza boas práticas de OO: as entidades 
 - Endpoint `GET /api/health` para verificação rápida do backend.
 - Fluxo simples de autenticação (`/api/auth/login`, `/api/auth/me`, `/api/auth/logout`) que demonstra como persistir informações do usuário na sessão.
 
+## Diretrizes de UI e Dropdowns com Busca
+- O componente `frontend/src/components/SearchableDropdown.vue` unifica o comportamento dos dropdowns. Ele só mostra sugestões após o usuário digitar ao menos duas letras, exibe um hint enquanto o termo é curto, aceita navegação por teclado (setas, Enter, Esc) e reutiliza a paleta definida em `assets/main.css`.
+- Cada item suporta `label`, `description` e `keywords` (tipados em `frontend/src/components/dropdown.types.ts`), permitindo buscas por nome, sigla, RA ou data sem precisar duplicar selects em cada tela.
+- Os filtros e formulários de **Alunos**, **Notas** e **Provas** agora usam esse componente. Além do typeahead, adicionamos carregamento e mensagens de erro compartilhadas, botão de limpar nos filtros e bloqueio automático quando os dados auxiliares ainda não foram carregados.
+- A listagem de alunos passou a renderizar o *nome* do departamento e o formulário só envia o `departamentoId` derivado da seleção por nome, evitando entradas manuais de IDs.
+- Quando não há departamentos cadastrados, tanto os cadastros de alunos quanto de provas exibem o aviso correspondente e desabilitam o envio, garantindo feedback consistente ao usuário.
+
 ## Arquitetura e Diagramas
 
 ### MVC + DAO (backend)

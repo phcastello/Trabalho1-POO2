@@ -3,6 +3,8 @@ import { computed, reactive, ref, onMounted } from "vue";
 import { storeToRefs } from "pinia";
 import { useProvas } from "@/store/provas";
 import { useDepartamentos } from "@/store/departamentos";
+import SearchableDropdown from "@/components/SearchableDropdown.vue";
+import type { SearchableDropdownOption } from "@/components/dropdown.types";
 import type { Prova } from "@/api/provas";
 
 const provasStore = useProvas();
@@ -33,6 +35,14 @@ const tableBusy = computed(() => loading.value && !hasProvas.value);
 const formTitle = computed(() => (formMode.value === "edit" ? "Editar prova" : "Cadastrar prova"));
 const submitLabel = computed(() => (formMode.value === "edit" ? "Salvar alterações" : "Cadastrar prova"));
 const departamentosCarregados = computed(() => departamentos.value.length > 0);
+const departamentoOptions = computed<SearchableDropdownOption[]>(() =>
+  departamentos.value.map((departamento) => ({
+    value: String(departamento.id),
+    label: departamento.nome,
+    description: departamento.sigla ? `Sigla: ${departamento.sigla}` : `ID interno: ${departamento.id}`,
+    keywords: departamento.sigla ? [departamento.sigla, String(departamento.id)] : [String(departamento.id)],
+  }))
+);
 
 function clearFeedback() {
   feedback.success = "";
@@ -265,16 +275,14 @@ function formatDate(value: string) {
           <div class="form-row">
             <div class="form-field">
               <label for="prova-departamento">Departamento *</label>
-              <select
+              <SearchableDropdown
                 id="prova-departamento"
                 v-model="form.departamentoId"
+                :items="departamentoOptions"
+                placeholder="Digite o nome ou sigla do departamento"
                 :disabled="departamentosLoading || !departamentosCarregados"
-              >
-                <option value="" disabled>Selecione um departamento</option>
-                <option v-for="departamento in departamentos" :key="departamento.id" :value="departamento.id">
-                  {{ departamento.nome }} ({{ departamento.sigla ?? `#${departamento.id}` }})
-                </option>
-              </select>
+                :loading="departamentosLoading"
+              />
             </div>
 
             <div class="form-field">

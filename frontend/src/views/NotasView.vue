@@ -4,6 +4,8 @@ import { storeToRefs } from "pinia";
 import { useNotas } from "@/store/notas";
 import { useAlunos } from "@/store/alunos";
 import { useProvas } from "@/store/provas";
+import SearchableDropdown from "@/components/SearchableDropdown.vue";
+import type { SearchableDropdownOption } from "@/components/dropdown.types";
 import type { Nota } from "@/api/notas";
 
 const notasStore = useNotas();
@@ -45,6 +47,33 @@ const formTitle = computed(() =>
 );
 const submitLabel = computed(() =>
   formMode.value === "edit" ? "Salvar alterações" : "Lançar nota"
+);
+
+function keywordList(...values: (string | number | null | undefined)[]) {
+  return values
+    .filter((value): value is string | number => value !== null && value !== undefined)
+    .map((value) => String(value).trim())
+    .filter((value) => value.length > 0);
+}
+
+const alunoOptions = computed<SearchableDropdownOption[]>(() =>
+  alunos.value.map((aluno) => ({
+    value: String(aluno.id),
+    label: aluno.nome,
+    description: `RA: ${aluno.ra}`,
+    keywords: keywordList(aluno.ra, aluno.nome),
+  }))
+);
+const provaOptions = computed<SearchableDropdownOption[]>(() =>
+  provas.value.map((prova) => {
+    const description = provaLabel(prova.id);
+    return {
+      value: String(prova.id),
+      label: prova.titulo,
+      description,
+      keywords: keywordList(prova.titulo, description, formatDate(prova.data) || null, String(prova.id)),
+    };
+  })
 );
 
 function clearFeedback() {
@@ -90,13 +119,13 @@ function extractMessage(error: unknown) {
   return "Não foi possível concluir a operação.";
 }
 
-function normalizeObservacao(value: string) {
-  const trimmed = value.trim();
+function normalizeObservacao(value: string | number | null | undefined) {
+  const trimmed = String(value ?? "").trim();
   return trimmed.length > 0 ? trimmed : null;
 }
 
-function parseNotaValor(value: string) {
-  const normalized = value.trim().replace(",", ".");
+function parseNotaValor(value: string | number | null | undefined) {
+  const normalized = String(value ?? "").trim().replace(",", ".");
   if (normalized.length === 0) {
     throw new Error("Informe uma nota válida.");
   }
@@ -303,22 +332,26 @@ function formatDateTime(value: string) {
         <div class="filters">
           <div class="form-field">
             <label for="filtro-aluno">Filtrar por aluno</label>
-            <select id="filtro-aluno" v-model="filters.alunoId">
-              <option value="">Todos os alunos</option>
-              <option v-for="aluno in alunos" :key="aluno.id" :value="aluno.id">
-                {{ aluno.nome }} (RA: {{ aluno.ra }})
-              </option>
-            </select>
+            <SearchableDropdown
+              id="filtro-aluno"
+              v-model="filters.alunoId"
+              :items="alunoOptions"
+              placeholder="Digite nome ou RA"
+              clearable
+              :loading="alunosLoading"
+            />
           </div>
 
           <div class="form-field">
             <label for="filtro-prova">Filtrar por prova</label>
-            <select id="filtro-prova" v-model="filters.provaId">
-              <option value="">Todas as provas</option>
-              <option v-for="prova in provas" :key="prova.id" :value="prova.id">
-                {{ provaLabel(prova.id) }}
-              </option>
-            </select>
+            <SearchableDropdown
+              id="filtro-prova"
+              v-model="filters.provaId"
+              :items="provaOptions"
+              placeholder="Digite título ou data"
+              clearable
+              :loading="provasLoading"
+            />
           </div>
         </div>
 
@@ -386,30 +419,26 @@ function formatDateTime(value: string) {
           <div class="form-row">
             <div class="form-field">
               <label for="nota-aluno">Aluno *</label>
-              <select
+              <SearchableDropdown
                 id="nota-aluno"
                 v-model="form.alunoId"
+                :items="alunoOptions"
+                placeholder="Digite nome ou RA do aluno"
                 :disabled="formMode === 'edit' || alunosLoading"
-              >
-                <option value="" disabled>Selecione um aluno</option>
-                <option v-for="aluno in alunos" :key="aluno.id" :value="aluno.id">
-                  {{ aluno.nome }} (RA: {{ aluno.ra }})
-                </option>
-              </select>
+                :loading="alunosLoading"
+              />
             </div>
 
             <div class="form-field">
               <label for="nota-prova">Prova *</label>
-              <select
+              <SearchableDropdown
                 id="nota-prova"
                 v-model="form.provaId"
+                :items="provaOptions"
+                placeholder="Digite título ou data da prova"
                 :disabled="formMode === 'edit' || provasLoading"
-              >
-                <option value="" disabled>Selecione uma prova</option>
-                <option v-for="prova in provas" :key="prova.id" :value="prova.id">
-                  {{ provaLabel(prova.id) }}
-                </option>
-              </select>
+                :loading="provasLoading"
+              />
             </div>
           </div>
 

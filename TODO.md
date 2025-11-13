@@ -8,32 +8,26 @@
     - [x] Validar os resultados executando contra o Postgres provisionado via `infra/docker-compose-db.yml` (ou `mvn flyway:migrate` + `psql`).
     - [x] Incluir a descrição e a saída esperada no README ou em um anexo do relatório para comprovar o requisito.
 
-- [ ] **Evidências do Plano de Teste para as Consultas**
-  - **Situação:** Ao adicionar as consultas, será necessário mostrar como foram verificadas.
-  - **Checklist:**
-    - [ ] Registrar no README (seção BD2) os comandos utilizados para validar cada consulta.
-    - [ ] Adicionar, quando possível, capturas (`psql` ou `DBeaver`) em `docs/queries/`.
-
-- [ ] **Cadastro de Alunos – Departamento por Nome**
+- [x] **Cadastro de Alunos – Departamento por Nome**
   - **Situação:** O formulário ainda consome o `id` do departamento e exibe o mesmo identificador na listagem, o que atrapalha o entendimento do usuário final.
   - **Checklist:**
-    - [ ] Trocar o campo atual por um dropdown com busca pelo nome (typeahead) que só aparece após digitar as primeiras letras.
-    - [ ] Ajustar o payload do cadastro/edição para enviar o `id` correto a partir da seleção do nome.
-    - [ ] Atualizar a listagem dos alunos para renderizar o nome do departamento.
+    - [x] Trocar o campo atual por um dropdown com busca pelo nome (typeahead) que só aparece após digitar as primeiras letras.
+    - [x] Ajustar o payload do cadastro/edição para enviar o `id` correto a partir da seleção do nome.
+    - [x] Atualizar a listagem dos alunos para renderizar o nome do departamento.
 
-- [ ] **Comportamento Padrão dos Dropdowns nos CRUDs**
+- [x] **Comportamento Padrão dos Dropdowns nos CRUDs**
   - **Situação:** Cada tela trata o carregamento dos dropdowns de forma diferente, gerando inconsistências de usabilidade.
   - **Checklist:**
-    - [ ] Definir um componente reutilizável de dropdown com busca incremental que seja aplicado a todos os CRUDs.
-    - [ ] Substituir os dropdowns atuais pelo novo componente garantindo que só abra após o usuário digitar parte do termo.
-    - [ ] Validar se o comportamento ficou uniforme em alunos, professores, turmas etc.
+    - [x] Definir um componente reutilizável de dropdown com busca incremental que seja aplicado a todos os CRUDs.
+    - [x] Substituir os dropdowns atuais pelo novo componente garantindo que só abra após o usuário digitar parte do termo.
+    - [x] Validar se o comportamento ficou uniforme em alunos, professores, turmas etc.
 
-- [ ] **Estilização Consistente dos Dropdowns**
+- [x] **Estilização Consistente dos Dropdowns**
   - **Situação:** Além do comportamento desigual, os dropdowns carecem de padronização visual.
   - **Checklist:**
-    - [ ] Adotar um guideline (spacing, cores, ícones) e aplicar via CSS/tema compartilhado.
-    - [ ] Revisar estados de foco, hover, vazio e preenchido para manter acessibilidade.
-    - [ ] Garantir responsividade em telas menores.
+    - [x] Adotar um guideline (spacing, cores, ícones) e aplicar via CSS/tema compartilhado.
+    - [x] Revisar estados de foco, hover, vazio e preenchido para manter acessibilidade.
+    - [x] Garantir responsividade em telas menores.
 
 - [ ] **Login com Validação Real**
   - **Situação:** A tela de login não autentica de fato contra o backend, permitindo acesso sem credenciais válidas.

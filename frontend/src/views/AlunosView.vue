@@ -2,10 +2,19 @@
 import { computed, reactive, ref, onMounted } from "vue";
 import { storeToRefs } from "pinia";
 import { useAlunos } from "@/store/alunos";
+import { useDepartamentos } from "@/store/departamentos";
+import SearchableDropdown from "@/components/SearchableDropdown.vue";
+import type { SearchableDropdownOption } from "@/components/dropdown.types";
 import type { Aluno } from "@/api/alunos";
 
 const alunosStore = useAlunos();
+const departamentosStore = useDepartamentos();
 const { items, loading } = storeToRefs(alunosStore);
+const {
+  items: departamentos,
+  loading: departamentosLoading,
+  lastError: departamentosError,
+} = storeToRefs(departamentosStore);
 
 const pageError = ref("");
 const formMode = ref<"create" | "edit">("create");
@@ -26,6 +35,15 @@ const hasAlunos = computed(() => items.value.length > 0);
 const tableBusy = computed(() => loading.value && !hasAlunos.value);
 const formTitle = computed(() => (formMode.value === "edit" ? "Editar aluno" : "Cadastrar aluno"));
 const submitLabel = computed(() => (formMode.value === "edit" ? "Salvar alterações" : "Cadastrar aluno"));
+const departamentosCarregados = computed(() => departamentos.value.length > 0);
+const departamentoOptions = computed<SearchableDropdownOption[]>(() =>
+  departamentos.value.map((departamento) => ({
+    value: String(departamento.id),
+    label: departamento.nome,
+    description: departamento.sigla ? `Sigla: ${departamento.sigla}` : `ID interno: ${departamento.id}`,
+    keywords: departamento.sigla ? [departamento.sigla, String(departamento.id)] : [String(departamento.id)],
+  }))
+);
 
 const formatDate = (value: string | null) => {
   if (!value) return "--";
@@ -90,12 +108,18 @@ async function refresh() {
   pageError.value = "";
   try {
     await alunosStore.fetch(true);
+    await departamentosStore.fetch(true);
   } catch (error) {
     pageError.value = extractMessage(error);
   }
 }
 
 onMounted(() => {
+  if (!departamentosStore.initialized) {
+    departamentosStore.fetch().catch((error) => {
+      console.error("Falha ao carregar departamentos:", error);
+    });
+  }
   if (!alunosStore.initialized) {
     refresh();
   }
@@ -166,6 +190,11 @@ async function removeAluno(aluno: Aluno) {
     removingId.value = null;
   }
 }
+
+function departamentoNome(id: number) {
+  const departamento = departamentos.value.find((item) => item.id === id);
+  return departamento ? departamento.nome : `Departamento #${id}`;
+}
 </script>
 
 <template>
@@ -206,7 +235,7 @@ async function removeAluno(aluno: Aluno) {
                 <td>{{ aluno.ra }}</td>
                 <td>{{ aluno.nome }}</td>
                 <td>{{ formatEmail(aluno.email) }}</td>
-                <td>#{{ aluno.departamentoId }}</td>
+                <td>{{ departamentoNome(aluno.departamentoId) }}</td>
                 <td>{{ formatDate(aluno.dataNascimento) }}</td>
                 <td class="actions-col">
                   <button type="button" class="link-button" @click="startEdit(aluno)">
@@ -249,12 +278,13 @@ async function removeAluno(aluno: Aluno) {
             </div>
             <div class="form-field">
               <label for="aluno-departamento">Departamento *</label>
-              <input
+              <SearchableDropdown
                 id="aluno-departamento"
                 v-model="form.departamentoId"
-                type="number"
-                min="1"
-                placeholder="ID do departamento"
+                :items="departamentoOptions"
+                placeholder="Digite o nome do departamento"
+                :disabled="departamentosLoading || !departamentosCarregados"
+                :loading="departamentosLoading"
               />
             </div>
           </div>
@@ -274,10 +304,16 @@ async function removeAluno(aluno: Aluno) {
             <input id="aluno-data-nascimento" v-model="form.dataNascimento" type="date" />
           </div>
 
+          <p v-if="departamentosLoading" class="status">Carregando departamentos...</p>
+          <p v-else-if="departamentosError" class="status status-error">{{ departamentosError }}</p>
+          <p v-else-if="!departamentosCarregados" class="status status-error">
+            Cadastre um departamento antes de adicionar alunos.
+          </p>
+
           <p v-if="feedback.error" class="status status-error">{{ feedback.error }}</p>
           <p v-if="feedback.success" class="status status-success">{{ feedback.success }}</p>
 
-          <button type="submit" :disabled="saving">
+          <button type="submit" :disabled="saving || departamentosLoading || !departamentosCarregados">
             {{ submitLabel }}
           </button>
         </form>
@@ -437,4 +473,3 @@ async function removeAluno(aluno: Aluno) {
   }
 }
 </style>
-
