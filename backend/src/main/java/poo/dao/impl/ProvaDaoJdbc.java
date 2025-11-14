@@ -2,7 +2,6 @@ package poo.dao.impl;
 
 import java.sql.Date;
 import java.time.LocalDate;
-import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -11,47 +10,38 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Repository;
 import poo.dao.ProvaDao;
+import poo.dao.support.JdbcTableMetadata;
 import poo.model.Prova;
 
 @Repository
 public class ProvaDaoJdbc implements ProvaDao {
 
-  private static final @NonNull String COLUMNS = nonNull(
-      "id, departamento_id, titulo, data, descricao, created_at, updated_at");
-  private static final @NonNull String INSERT_SQL = nonNull("""
-      INSERT INTO prova (departamento_id, titulo, data, descricao)
-      VALUES (?, ?, ?, ?)
-      RETURNING %s
-    """.formatted(COLUMNS));
-  private static final @NonNull String SELECT_BY_ID_SQL =
-      nonNull("SELECT %s FROM prova WHERE id = ?".formatted(COLUMNS));
-  private static final @NonNull String SELECT_ALL_SQL =
-      nonNull("SELECT %s FROM prova ORDER BY data DESC, titulo".formatted(COLUMNS));
-  private static final @NonNull String UPDATE_SQL = nonNull("""
-      UPDATE prova
-      SET departamento_id = ?, titulo = ?, data = ?, descricao = ?
-      WHERE id = ?
-      RETURNING %s
-    """.formatted(COLUMNS));
+  private static final @NonNull JdbcTableMetadata<Prova> TABLE = JdbcTableMetadata
+    .<Prova>builder("prova")
+    .columns("id", "departamento_id", "titulo", "data", "descricao")
+    .auditable()
+    .defaultOrderBy("data DESC, titulo")
+    .rowMapper((rs, rowNum) -> {
+      Prova prova = new Prova();
+      prova.setId(rs.getLong("id"));
+      prova.setDepartamentoId(rs.getLong("departamento_id"));
+      prova.setTitulo(rs.getString("titulo"));
+      prova.setData(rs.getObject("data", LocalDate.class));
+      prova.setDescricao(rs.getString("descricao"));
+      JdbcTableMetadata.populateAuditColumns(rs, prova::setCreatedAt, prova::setUpdatedAt);
+      return prova;
+    })
+    .build();
 
-  private static final @NonNull RowMapper<Prova> ROW_MAPPER = (rs, rowNum) -> {
-    Prova prova = new Prova();
-    prova.setId(rs.getLong("id"));
-    prova.setDepartamentoId(rs.getLong("departamento_id"));
-    prova.setTitulo(rs.getString("titulo"));
-    prova.setData(rs.getObject("data", LocalDate.class));
-    prova.setDescricao(rs.getString("descricao"));
-
-    OffsetDateTime created = rs.getObject("created_at", OffsetDateTime.class);
-    if (created != null) {
-      prova.setCreatedAt(created.toInstant());
-    }
-    OffsetDateTime updated = rs.getObject("updated_at", OffsetDateTime.class);
-    if (updated != null) {
-      prova.setUpdatedAt(updated.toInstant());
-    }
-    return prova;
-  };
+  private static final @NonNull RowMapper<Prova> ROW_MAPPER = TABLE.rowMapper();
+  private static final @NonNull String INSERT_SQL = TABLE.insertReturningSql("departamento_id, titulo, data, descricao");
+  private static final @NonNull String SELECT_BY_ID_SQL = TABLE.selectByIdSql("id = ?");
+  private static final @NonNull String SELECT_ALL_SQL = TABLE.selectAllSql();
+  private static final @NonNull String UPDATE_SQL = TABLE.updateReturningSql(
+    "departamento_id = ?, titulo = ?, data = ?, descricao = ?",
+    "id = ?"
+  );
+  private static final @NonNull String DELETE_SQL = TABLE.deleteSql("id = ?");
 
   private final JdbcTemplate jdbc;
 
@@ -95,18 +85,10 @@ public class ProvaDaoJdbc implements ProvaDao {
 
   @Override
   public boolean delete(Long id) {
-    return jdbc.update("DELETE FROM prova WHERE id = ?", id) > 0;
+    return jdbc.update(DELETE_SQL, id) > 0;
   }
 
   private static Date toSqlDate(LocalDate data) {
     return data != null ? Date.valueOf(data) : null;
-  }
-
-  @NonNull
-  private static <T> T nonNull(T value) {
-    if (value == null) {
-      throw new IllegalStateException("Unexpected null value");
-    }
-    return value;
   }
 }

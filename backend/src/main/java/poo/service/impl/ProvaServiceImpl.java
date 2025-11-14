@@ -1,25 +1,31 @@
 package poo.service.impl;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.dao.DuplicateKeyException;
-import org.springframework.http.HttpStatus;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 import poo.dao.ProvaDao;
 import poo.model.Prova;
 import poo.service.ProvaService;
+import poo.service.support.CrudServiceSupport;
+import poo.service.support.CrudServiceSupport.UpsertErrorDescriptor;
 
 @Service
 public class ProvaServiceImpl implements ProvaService {
 
   private final ProvaDao dao;
+  private final CrudServiceSupport support;
 
-  public ProvaServiceImpl(ProvaDao dao) {
+  private static final @NonNull UpsertErrorDescriptor PROVA_ERRORS = CrudServiceSupport.conflictBadRequest(
+    "Já existe uma prova com este título na mesma data para o departamento.",
+    "Dados inválidos para a prova."
+  );
+
+  public ProvaServiceImpl(ProvaDao dao, CrudServiceSupport support) {
     this.dao = dao;
+    this.support = support;
   }
 
   @Override
@@ -27,7 +33,7 @@ public class ProvaServiceImpl implements ProvaService {
     try {
       return dao.create(prova);
     } catch (DataAccessException ex) {
-      throw translateUpsertException(ex);
+      throw support.translateUpsertException(ex, PROVA_ERRORS);
     }
   }
 
@@ -43,18 +49,21 @@ public class ProvaServiceImpl implements ProvaService {
 
   @Override
   public Optional<Prova> update(Long id, Prova prova) {
-    Objects.requireNonNull(id, "id não pode ser nulo");
-    Prova toUpdate = new Prova();
-    toUpdate.setId(id);
-    toUpdate.setDepartamentoId(prova.getDepartamentoId());
-    toUpdate.setTitulo(prova.getTitulo());
-    toUpdate.setData(prova.getData());
-    toUpdate.setDescricao(prova.getDescricao());
+    Prova toUpdate = support
+      .updater(Prova::new)
+      .withId(id, Prova::setId, "id")
+      .copy(prova, (target, source) -> {
+        target.setDepartamentoId(source.getDepartamentoId());
+        target.setTitulo(source.getTitulo());
+        target.setData(source.getData());
+        target.setDescricao(source.getDescricao());
+      })
+      .build();
 
     try {
       return dao.update(toUpdate);
     } catch (DataAccessException ex) {
-      throw translateUpsertException(ex);
+      throw support.translateUpsertException(ex, PROVA_ERRORS);
     }
   }
 
@@ -63,26 +72,10 @@ public class ProvaServiceImpl implements ProvaService {
     try {
       return dao.delete(id);
     } catch (DataIntegrityViolationException ex) {
-      throw new ResponseStatusException(
-        HttpStatus.CONFLICT,
-        "Não é possível remover a prova porque existem registros relacionados.",
-        ex
+      throw support.translateDeleteException(
+        ex,
+        "Não é possível remover a prova porque existem registros relacionados."
       );
     }
-  }
-
-  private RuntimeException translateUpsertException(DataAccessException ex) {
-    if (ex instanceof DuplicateKeyException) {
-      return new ResponseStatusException(
-        HttpStatus.CONFLICT,
-        "Já existe uma prova com este título na mesma data para o departamento.",
-        ex
-      );
-    }
-    if (ex instanceof DataIntegrityViolationException) {
-      return new ResponseStatusException(HttpStatus.BAD_REQUEST, "Dados inválidos para a prova.", ex);
-    }
-    return ex;
   }
 }
-

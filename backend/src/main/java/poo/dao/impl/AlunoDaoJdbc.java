@@ -2,57 +2,47 @@ package poo.dao.impl;
 
 import java.sql.Date;
 import java.time.LocalDate;
-import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
-import org.springframework.stereotype.Repository;
 import org.springframework.lang.NonNull;
+import org.springframework.stereotype.Repository;
 import poo.dao.AlunoDao;
+import poo.dao.support.JdbcTableMetadata;
 import poo.model.Aluno;
 
 @Repository
 public class AlunoDaoJdbc implements AlunoDao {
 
-  private static final @NonNull String COLUMNS =
-      nonNull("id, ra, nome, email, departamento_id, data_nascimento, created_at, updated_at");
-  private static final @NonNull String INSERT_SQL = nonNull("""
-      INSERT INTO aluno (ra, nome, email, departamento_id, data_nascimento)
-      VALUES (?, ?, ?, ?, ?)
-      RETURNING %s
-    """.formatted(COLUMNS));
-  private static final @NonNull String SELECT_BY_ID_SQL =
-      nonNull("SELECT %s FROM aluno WHERE id = ?".formatted(COLUMNS));
-  private static final @NonNull String SELECT_ALL_SQL =
-      nonNull("SELECT %s FROM aluno ORDER BY nome".formatted(COLUMNS));
-  private static final @NonNull String UPDATE_SQL = nonNull("""
-      UPDATE aluno
-      SET ra = ?, nome = ?, email = ?, departamento_id = ?, data_nascimento = ?
-      WHERE id = ?
-      RETURNING %s
-    """.formatted(COLUMNS));
+  private static final @NonNull JdbcTableMetadata<Aluno> TABLE = JdbcTableMetadata
+    .<Aluno>builder("aluno")
+    .columns("id", "ra", "nome", "email", "departamento_id", "data_nascimento")
+    .auditable()
+    .defaultOrderBy("nome")
+    .rowMapper((rs, rowNum) -> {
+      Aluno aluno = new Aluno();
+      aluno.setId(rs.getLong("id"));
+      aluno.setRa(rs.getString("ra"));
+      aluno.setNome(rs.getString("nome"));
+      aluno.setEmail(rs.getString("email"));
+      aluno.setDepartamentoId(rs.getLong("departamento_id"));
+      aluno.setDataNascimento(rs.getObject("data_nascimento", LocalDate.class));
+      JdbcTableMetadata.populateAuditColumns(rs, aluno::setCreatedAt, aluno::setUpdatedAt);
+      return aluno;
+    })
+    .build();
 
-  private static final @NonNull RowMapper<Aluno> ROW_MAPPER = (rs, rowNum) -> {
-    Aluno aluno = new Aluno();
-    aluno.setId(rs.getLong("id"));
-    aluno.setRa(rs.getString("ra"));
-    aluno.setNome(rs.getString("nome"));
-    aluno.setEmail(rs.getString("email"));
-    aluno.setDepartamentoId(rs.getLong("departamento_id"));
-    aluno.setDataNascimento(rs.getObject("data_nascimento", LocalDate.class));
-
-    OffsetDateTime created = rs.getObject("created_at", OffsetDateTime.class);
-    if (created != null) {
-      aluno.setCreatedAt(created.toInstant());
-    }
-    OffsetDateTime updated = rs.getObject("updated_at", OffsetDateTime.class);
-    if (updated != null) {
-      aluno.setUpdatedAt(updated.toInstant());
-    }
-    return aluno;
-  };
+  private static final @NonNull RowMapper<Aluno> ROW_MAPPER = TABLE.rowMapper();
+  private static final @NonNull String INSERT_SQL = TABLE.insertReturningSql("ra, nome, email, departamento_id, data_nascimento");
+  private static final @NonNull String SELECT_BY_ID_SQL = TABLE.selectByIdSql("id = ?");
+  private static final @NonNull String SELECT_ALL_SQL = TABLE.selectAllSql();
+  private static final @NonNull String UPDATE_SQL = TABLE.updateReturningSql(
+    "ra = ?, nome = ?, email = ?, departamento_id = ?, data_nascimento = ?",
+    "id = ?"
+  );
+  private static final @NonNull String DELETE_SQL = TABLE.deleteSql("id = ?");
 
   private final JdbcTemplate jdbc;
 
@@ -98,18 +88,10 @@ public class AlunoDaoJdbc implements AlunoDao {
 
   @Override
   public boolean delete(Long id) {
-    return jdbc.update("DELETE FROM aluno WHERE id = ?", id) > 0;
+    return jdbc.update(DELETE_SQL, id) > 0;
   }
 
   private static Date toSqlDate(LocalDate data) {
     return data != null ? Date.valueOf(data) : null;
-  }
-
-  @NonNull
-  private static <T> T nonNull(T value) {
-    if (value == null) {
-      throw new IllegalStateException("Unexpected null value");
-    }
-    return value;
   }
 }

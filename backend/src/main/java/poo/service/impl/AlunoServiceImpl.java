@@ -1,25 +1,31 @@
 package poo.service.impl;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.dao.DuplicateKeyException;
-import org.springframework.http.HttpStatus;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 import poo.dao.AlunoDao;
 import poo.model.Aluno;
 import poo.service.AlunoService;
+import poo.service.support.CrudServiceSupport;
+import poo.service.support.CrudServiceSupport.UpsertErrorDescriptor;
 
 @Service
 public class AlunoServiceImpl implements AlunoService {
 
   private final AlunoDao dao;
+  private final CrudServiceSupport support;
 
-  public AlunoServiceImpl(AlunoDao dao) {
+  private static final @NonNull UpsertErrorDescriptor ALUNO_ERRORS = CrudServiceSupport.conflictBadRequest(
+    "RA ou e-mail já cadastrado.",
+    "Dados inválidos para o aluno."
+  );
+
+  public AlunoServiceImpl(AlunoDao dao, CrudServiceSupport support) {
     this.dao = dao;
+    this.support = support;
   }
 
   @Override
@@ -27,7 +33,7 @@ public class AlunoServiceImpl implements AlunoService {
     try {
       return dao.create(aluno);
     } catch (DataAccessException ex) {
-      throw translateUpsertException(ex);
+      throw support.translateUpsertException(ex, ALUNO_ERRORS);
     }
   }
 
@@ -43,19 +49,22 @@ public class AlunoServiceImpl implements AlunoService {
 
   @Override
   public Optional<Aluno> update(Long id, Aluno aluno) {
-    Objects.requireNonNull(id, "id não pode ser nulo");
-    Aluno toUpdate = new Aluno();
-    toUpdate.setId(id);
-    toUpdate.setRa(aluno.getRa());
-    toUpdate.setNome(aluno.getNome());
-    toUpdate.setEmail(aluno.getEmail());
-    toUpdate.setDepartamentoId(aluno.getDepartamentoId());
-    toUpdate.setDataNascimento(aluno.getDataNascimento());
+    Aluno toUpdate = support
+      .updater(Aluno::new)
+      .withId(id, Aluno::setId, "id")
+      .copy(aluno, (target, source) -> {
+        target.setRa(source.getRa());
+        target.setNome(source.getNome());
+        target.setEmail(source.getEmail());
+        target.setDepartamentoId(source.getDepartamentoId());
+        target.setDataNascimento(source.getDataNascimento());
+      })
+      .build();
 
     try {
       return dao.update(toUpdate);
     } catch (DataAccessException ex) {
-      throw translateUpsertException(ex);
+      throw support.translateUpsertException(ex, ALUNO_ERRORS);
     }
   }
 
@@ -64,22 +73,10 @@ public class AlunoServiceImpl implements AlunoService {
     try {
       return dao.delete(id);
     } catch (DataIntegrityViolationException ex) {
-      throw new ResponseStatusException(
-        HttpStatus.CONFLICT,
-        "Não é possível remover o aluno porque existem registros relacionados.",
-        ex
+      throw support.translateDeleteException(
+        ex,
+        "Não é possível remover o aluno porque existem registros relacionados."
       );
     }
   }
-
-  private RuntimeException translateUpsertException(DataAccessException ex) {
-    if (ex instanceof DuplicateKeyException) {
-      return new ResponseStatusException(HttpStatus.CONFLICT, "RA ou e-mail já cadastrado.", ex);
-    }
-    if (ex instanceof DataIntegrityViolationException) {
-      return new ResponseStatusException(HttpStatus.BAD_REQUEST, "Dados inválidos para o aluno.", ex);
-    }
-    return ex;
-  }
 }
-

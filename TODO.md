@@ -36,9 +36,9 @@
     - [ ] Armazenar o token/sessão no fluxo esperado (ex.: `localStorage` + interceptors).
     - [ ] Bloquear rotas protegidas para usuários não autenticados e criar testes manuais cobrindo o fluxo.
 
-- [ ] **Oportunidades de Refatoração no Backend**
+- [x] **Oportunidades de Refatoração no Backend**
   - **Situação:** Há trechos do backend crescendo em complexidade sem uma análise estruturada de melhorias.
   - **Checklist:**
-    - [ ] Mapear ao menos quatro alvos (métodos, controllers, services ou models) que se beneficiariam de refatoração.
-    - [ ] Documentar para cada alvo o problema atual (dívida técnica, duplicação, falta de testes, etc.).
-    - [ ] Priorizar os alvos e propor o escopo inicial de cada refactor (ex.: extrair serviço, dividir responsabilidades, adicionar testes).
+    - [x] Mapear ao menos quatro alvos (métodos, controllers, services ou models) que se beneficiariam de refatoração.
+    - [x] Documentar para cada alvo o problema atual (dívida técnica, duplicação, falta de testes, etc.).
+    - [x] Priorizar os alvos e propor o escopo inicial de cada refactor (ex.: extrair serviço, dividir responsabilidades, adicionar testes).
